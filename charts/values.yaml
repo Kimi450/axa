@@ -1,0 +1,22 @@
+replicaCount: 1
+image:
+  repository: kimi450/axa
+  tag: latest
+  pullPolicy: Always
+service:
+  name: axa
+  portname: metrics
+  type: NodePort
+  targetPort: 8000 # port the server runs on
+  internalPort: 8000 # internal port exposed on the node
+  nodeport: 31000
+
+monitoring:
+  releaseName: kube-prometheus-stack # name of the monitoring helm release
+  namespace: monitoring # name of the monitoring namespace
+
+# resources:
+#   limits:
+#     memory: 32Mi
+#   requests:
+#     memory: 16Mi
