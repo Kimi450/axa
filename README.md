@@ -25,12 +25,12 @@ docker build -t kimi450/axa-test . && docker run --rm -p 8000:8000 kimi450/axa-t
 usage: axa [-h] [--annual-distance ANNUAL_DISTANCE] [--first-name FIRST_NAME] [--last-name LAST_NAME] [--date-of-birth DATE_OF_BIRTH] [--phone-number PHONE_NUMBER] [--email EMAIL] [--occupation OCCUPATION] [--eir-code EIR_CODE] [--license-held LICENSE_HELD]
            [--registrations [REGISTRATIONS [REGISTRATIONS ...]]] [--prometheus-client-port PROMETHEUS_CLIENT_PORT] [--config-file CONFIG_FILE]
 
+Get car insurance quotes from Axa based on certain assumption. Read the README on https://github.com/Kimi450/axa for more information. Provide the arguments from either 'no_config_file_args_group' or 'config_file_args_group'.
+
 optional arguments:
   -h, --help            show this help message and exit
-  --config-file CONFIG_FILE
-                        Config file instead of inputting all the required parameters
 
-group_args:
+no_config_file_args_group:
   Group of required arguments if no config file is provided
 
   --annual-distance ANNUAL_DISTANCE
@@ -53,6 +53,12 @@ group_args:
                         Registrations of cars to get quotes for
   --prometheus-client-port PROMETHEUS_CLIENT_PORT
                         Port at which the Prometheus client server runs
+
+config_file_args_group:
+  Group of required arguments if config file is provided
+
+  --config-file CONFIG_FILE
+                        Config file instead of inputting all the required parameters
 ```
 
 # Website form information

@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-import prometheus_client
 import yaml
 
 from selenium.webdriver import *
@@ -255,63 +254,47 @@ class QuoteHandler:
         return f"{timedelta(seconds=time_in_seconds)} (hh:mm:ss)"
 
 def get_args():
-    parser = argparse.ArgumentParser("axa")
+    parser = argparse.ArgumentParser("axa", description="Get car insurance quotes from Axa based on certain assumption. Read the README on https://github.com/Kimi450/axa for more information. Provide the arguments from either 'no_config_file_args_group' or 'config_file_args_group'.")
 
-    group_args = parser.add_argument_group("group_args", "Group of required arguments if no config file is provided")
-    group_args.add_argument("--annual-distance", dest="annual_distance", help="Annual distance driven (exactly as seen on the website)", type=str)
-    group_args.add_argument("--first-name", dest="first_name", help="Your first name", type=str)
-    group_args.add_argument("--last-name", dest="last_name", help="Your last name", type=str)
-    group_args.add_argument("--date-of-birth", dest="date_of_birth", help="Your date of birth in format yyyy-mm-dd", type=str)
-    group_args.add_argument("--phone-number", dest="phone_number", help="Your phone number", type=str)
-    group_args.add_argument("--email", dest="email", help="Your email ID", type=str)
-    group_args.add_argument("--occupation", dest="occupation", help="You occupation (exactly as seen on the website)", type=str)
-    group_args.add_argument("--eir-code", dest="eir_code", help="Your eircode", type=str)
-    group_args.add_argument("--license-held", dest="license_held", help="Time license held for (exactly as seen on the website)", type=str)
-    group_args.add_argument("--registrations", dest="registrations", help="Registrations of cars to get quotes for", type=str, nargs='*')
-    group_args.add_argument("--prometheus-client-port", dest="prometheus_client_port", help="Port at which the Prometheus client server runs", type=int)
-    parser.add_argument("--config-file", dest="config_file", help="Config file instead of inputting all the required parameters", type=str)
+    no_config_file_args_group = parser.add_argument_group("no_config_file_args_group", "Group of required arguments if no config file is provided")
+    no_config_file_args_group.add_argument("--annual-distance", dest="annual_distance", help="Annual distance driven (exactly as seen on the website)", type=str)
+    no_config_file_args_group.add_argument("--first-name", dest="first_name", help="Your first name", type=str)
+    no_config_file_args_group.add_argument("--last-name", dest="last_name", help="Your last name", type=str)
+    no_config_file_args_group.add_argument("--date-of-birth", dest="date_of_birth", help="Your date of birth in format yyyy-mm-dd", type=str)
+    no_config_file_args_group.add_argument("--phone-number", dest="phone_number", help="Your phone number", type=str)
+    no_config_file_args_group.add_argument("--email", dest="email", help="Your email ID", type=str)
+    no_config_file_args_group.add_argument("--occupation", dest="occupation", help="You occupation (exactly as seen on the website)", type=str)
+    no_config_file_args_group.add_argument("--eir-code", dest="eir_code", help="Your eircode", type=str)
+    no_config_file_args_group.add_argument("--license-held", dest="license_held", help="Time license held for (exactly as seen on the website)", type=str)
+    no_config_file_args_group.add_argument("--registrations", dest="registrations", help="Registrations of cars to get quotes for", type=str, nargs='*')
+    no_config_file_args_group.add_argument("--prometheus-client-port", dest="prometheus_client_port", help="Port at which the Prometheus client server runs", type=int)
+
+    config_file_args_group = parser.add_argument_group("config_file_args_group", "Group of required arguments if config file is provided")
+    config_file_args_group.add_argument("--config-file", dest="config_file", help="Config file instead of inputting all the required parameters", type=str)
 
     args = parser.parse_args()
 
-    if (args.annual_distance is None \
-      or args.first_name is None \
-      or args.last_name is None \
-      or args.date_of_birth is None \
-      or args.phone_number is None \
-      or args.email is None \
-      or args.occupation is None \
-      or args.eir_code is None \
-      or args.license_held is None \
-      or args.registrations is None \
-      or args.prometheus_client_port is None) \
-      and args.config_file is None :
-        parser.error("IllegalArgument: At least one of the 'group_args' args are missing")
-    elif (args.annual_distance is not None \
-      or args.first_name is not None \
-      or args.last_name is not None \
-      or args.date_of_birth is not None \
-      or args.phone_number is not None \
-      or args.email is not None \
-      or args.occupation is not None \
-      or args.eir_code is not None \
-      or args.license_held is not None \
-      or args.registrations is not None \
-      or args.prometheus_client_port is not None) \
-      and args.config_file is not None :
-        parser.error("IllegalArgument: One of the 'group_args' has been provided when config file is provided.")
-    elif (args.annual_distance is None \
-      or args.first_name is None \
-      or args.last_name is None \
-      or args.date_of_birth is None \
-      or args.phone_number is None \
-      or args.email is None \
-      or args.occupation is None \
-      or args.eir_code is None \
-      or args.license_held is None \
-      or args.registrations is None \
-      or args.prometheus_client_port is None) \
-      and args.config_file is None :
-        parser.error("IllegalArgument: Either one of the 'group_args' has not been provided or the config file has not been provided.")
+    list_no_config_file_args = [args.annual_distance,
+        args.first_name, args.last_name, args.date_of_birth,
+        args.phone_number, args.email, args.occupation,
+        args.eir_code, args.license_held, args.registrations,
+        args.prometheus_client_port]
+    list_config_file_args = [args.config_file]
+
+    def _all_present_in_group(group):
+        return all([arg is not None for arg in group])
+
+    def _none_present_in_group(group):
+        return all([arg is None for arg in group])
+
+
+    if (_all_present_in_group(list_no_config_file_args) and _none_present_in_group(list_config_file_args)) \
+       or (_all_present_in_group(list_config_file_args) and _none_present_in_group(list_no_config_file_args)):
+        pass #alls good
+    else:
+        parser.error("Please provide all args from either 'no_config_file_args_group' or 'config_file_args_group' groups.")
+        exit()
+
     return args
 
 def parse_config_file(file, perms):
