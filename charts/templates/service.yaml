@@ -10,7 +10,6 @@ spec:
   ports:
     - name: {{ .Values.service.portname }}
       port: {{ .Values.service.internalPort }}
-      nodePort: {{ .Values.service.nodeport }}
       protocol: TCP
       targetPort: {{ .Values.service.targetPort }}
   selector:

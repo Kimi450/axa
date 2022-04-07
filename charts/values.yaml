@@ -9,7 +9,6 @@ service:
   type: NodePort
   targetPort: 8000 # port the server runs on
   internalPort: 8000 # internal port exposed on the node
-  nodeport: 31000
 
 monitoring:
   releaseName: kube-prometheus-stack # name of the monitoring helm release

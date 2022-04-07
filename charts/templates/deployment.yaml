@@ -19,3 +19,6 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
           - containerPort: {{ .Values.service.targetPort }}
+        command: ["axa"]
+        args: ["--config-file", "config.yaml"]
+      restartPolicy: Always
