@@ -88,5 +88,7 @@ config_file_args_group:
 |Do you or anyone living at your address have another policy insured with AXA?|NO|Non-configurable|
 |I have read and accept the assumptions.|CHECKED|Non-configurable|
 
+It will also save the quote for later user. Use the **date of birth** and the **email** used along with the **reference ID** when retrieving the quote on their webite at [Axa Retrieve quote](https://www.axa.ie/car-insurance/quote/retrieve-quote/).
+
 # Metrics
 Need to bring up the `ServiceMonitor` CRD in the same namespace of prometheus.

@@ -105,14 +105,17 @@ class QuoteHandler:
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument("--disable-extensions") 
+        chrome_options.add_argument("--disable-extensions")
         return Chrome(service=Service(ChromeDriverManager(print_first_line=False, log_level=logging.WARNING).install()), options=chrome_options)
 
     def _accept_cookies(self, driver):
         # accept cookies
-        self.logger.debug("Accepting cookies")
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'VehicleDetails.HasRegNumber1')))
-        driver.find_element(By.ID, "_evidon-accept-button").click()
+        try:
+            self.logger.debug("Accepting cookies")
+            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'VehicleDetails.HasRegNumber1')))
+            driver.find_element(By.ID, "_evidon-accept-button").click()
+        except Exception as e:
+            self.logger.error(e)
 
     def _confirm_car(self, driver, registration):
         # confirm car with registration number
@@ -203,6 +206,9 @@ class QuoteHandler:
                 
         return Quote(registration, ref_id, quote)
 
+    def _save_quote_reference_id(self, driver):
+        driver.find_element(By.XPATH, '//button[text()="Save Quote"]').click()
+
     def get_quote(self, config, registration, retry=3, sleep_time=60):
         self.logger.info(f"Getting quote for registration '{registration}'")
         driver = self.get_driver()
@@ -220,6 +226,7 @@ class QuoteHandler:
                 self._license_info(driver, config.license_held)
                 self._insurance_info(driver)
                 quote = self._submit_and_get_quote(driver, registration)
+                self._save_quote_reference_id(driver)
                 self.registration_metrics.labels(registration).set(quote.price)
                 self.logger.info(f"Quote retrieved successfully for registration {registration}")
                 self.logger.info(f"{quote}")
