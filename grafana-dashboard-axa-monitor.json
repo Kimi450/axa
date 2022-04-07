@@ -94,8 +94,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 18,
-        "w": 24,
+        "h": 20,
+        "w": 16,
         "x": 0,
         "y": 0
       },
@@ -182,10 +182,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 14,
+        "h": 20,
         "w": 8,
-        "x": 0,
-        "y": 18
+        "x": 16,
+        "y": 0
       },
       "id": 4,
       "options": {
@@ -203,7 +203,7 @@
           "exemplar": true,
           "expr": "failed_attempts_total",
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{ pod }}",
           "refId": "A"
         }
       ],
@@ -211,7 +211,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": false,
+  "refresh": "1h",
   "schemaVersion": 30,
   "style": "dark",
   "tags": [],
@@ -219,12 +219,12 @@
     "list": []
   },
   "time": {
-    "from": "2022-04-05T21:03:01.266Z",
-    "to": "2022-04-05T21:20:20.420Z"
+    "from": "now-24h",
+    "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "axa-monitor",
   "uid": "rL-KJR87k",
-  "version": 4
+  "version": 5
 }
