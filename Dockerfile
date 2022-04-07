@@ -10,6 +10,5 @@ RUN apt install -y /tmp/chrome.deb
 RUN rm /tmp/chrome.deb >/dev/null
 
 ADD src/axa.py /usr/local/bin/axa
-ADD config/config.yaml config.yaml
 
 EXPOSE 8000/tcp

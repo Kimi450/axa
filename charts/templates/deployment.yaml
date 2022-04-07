@@ -19,6 +19,15 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
           - containerPort: {{ .Values.service.targetPort }}
+        volumeMounts:
+          - name: {{ .Chart.Name }}-config-volume
+            mountPath: /etc/config
         command: ["axa"]
-        args: ["--config-file", "config.yaml"]
+        args: ["--config-file", "/etc/config/linked-config.yaml"]
+
+      volumes:
+        - name: {{ .Chart.Name }}-config-volume
+          configMap:
+            name: {{ .Chart.Name }}-config
+
       restartPolicy: Always
