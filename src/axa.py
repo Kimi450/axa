@@ -21,8 +21,9 @@ from time import sleep
 from datetime import timedelta, datetime
 
 class Quote:
-    def __init__(self, registration, reference_id, price):
+    def __init__(self, registration, car_name, reference_id, price):
         self._registration = registration
+        self._car_name = car_name
         self._reference_id = reference_id
         self._price = price
     
@@ -30,6 +31,10 @@ class Quote:
     def price(self):
         return self._price
         
+    @property
+    def car_name(self):
+        return self._car_name
+    
     @property
     def registration(self):
         return self._registration
@@ -42,6 +47,10 @@ class Quote:
     def price(self, price):
         self._price = price
     
+    @car_name.setter
+    def car_name(self, car_name):
+        self._car_name = car_name
+    
     @registration.setter
     def registration(self, registration):
         self._registration = registration
@@ -51,7 +60,7 @@ class Quote:
         self._reference_id = reference_id
         
     def __str__(self):
-        return f"Ref ID: {self.reference_id:10}, Registration: {self.registration:10}, Quote: €{self.price}"
+        return f"Ref ID: {self.reference_id:10}, Registration: {self.registration:10}, Quote: €{self.price:6}, Car name: {self.car_name}"
     
 class Config:
     def __init__(self, annual_distance, first_name, last_name, date_of_birth, phone_number, email, occupation, eir_code, license_held, registrations):
@@ -79,7 +88,7 @@ class Config:
 class QuoteHandler:
     def __init__(self):
         self._failed_attempts = Counter('failed_attempts', 'Failed attempts')
-        self._registration_metrics = Gauge("quote_prices", "Quote for registrations", ['registration'])
+        self._registration_metrics = Gauge("quote_prices", "Quote for registrations", ['registration', 'car_name'])
         logging.basicConfig(
             format='%(asctime)s %(levelname)-8s %(message)s',
             level=logging.INFO,
@@ -125,8 +134,9 @@ class QuoteHandler:
         driver.find_element(By.ID, "VehicleDetails.VehicleRegistrationNumber").send_keys(registration)
         driver.find_element(By.XPATH, '//button[text()="Find car"]').click()
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'VehicleDetails.ConfirmCarSearchBtn1')))
+        car_name = driver.find_element(By.XPATH, '//label[text()="Is this the correct car?"]/following-sibling::span/div').text
         driver.find_element(By.XPATH, "//*[@id='VehicleDetails.ConfirmCarSearchBtn1']/..").click()
-
+        return car_name
     def _business_use_info(self, driver):
         # For business use or not
         self.logger.debug("Inputting business use info")
@@ -185,7 +195,7 @@ class QuoteHandler:
         # # How to pay the price?
         # driver.find_element(By.XPATH, "//*[@id='CoverDetails.NormalPaymentMethodTypeId1']/..").click()
 
-    def _submit_and_get_quote(self, driver, registration):
+    def _submit_and_get_quote(self, driver, registration, car_name):
         # Terms and conditions
         self.logger.debug(f"Submitting rqeuest and getting quote for '{registration}'")
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'ConfirmAssumptions')))
@@ -204,7 +214,7 @@ class QuoteHandler:
         quote = driver.find_element(By.XPATH, '//*[@id="YourQuote.Quote"]/div/div[1]/span/div/div[1]/div[2]').text
         quote = float(quote[1:])
                 
-        return Quote(registration, ref_id, quote)
+        return Quote(registration, car_name, ref_id, quote)
 
     def _save_quote_reference_id(self, driver):
         driver.find_element(By.XPATH, '//button[text()="Save Quote"]').click()
@@ -217,7 +227,7 @@ class QuoteHandler:
                 driver.get("https://www.axa.ie/car-insurance/quote/your-details/?promoCode=AXP020001")
                 
                 self._accept_cookies(driver)
-                self._confirm_car(driver, registration)
+                car_name = self._confirm_car(driver, registration)
                 self._business_use_info(driver)
                 self._annual_distance(driver, config.annual_distance)
                 self._user_info(driver, config.first_name, config.last_name, config.date_of_birth, config.email, config.phone_number)
@@ -225,10 +235,10 @@ class QuoteHandler:
                 self._address_info(driver, config.eir_code)
                 self._license_info(driver, config.license_held)
                 self._insurance_info(driver)
-                quote = self._submit_and_get_quote(driver, registration)
+                quote = self._submit_and_get_quote(driver, registration, car_name)
                 self._save_quote_reference_id(driver)
-                self.registration_metrics.labels(registration).set(quote.price)
-                self.logger.info(f"Quote retrieved successfully for registration {registration}")
+                self.registration_metrics.labels(registration=registration, car_name=car_name).set(quote.price)
+                self.logger.info(f"Quote retrieved successfully for registration {registration}: {car_name}")
                 self.logger.info(f"{quote}")
                 return quote
             except Exception as e:

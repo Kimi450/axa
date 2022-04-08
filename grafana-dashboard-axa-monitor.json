@@ -108,7 +108,7 @@
             "lastNotNull"
           ],
           "displayMode": "table",
-          "placement": "right"
+          "placement": "bottom"
         },
         "tooltip": {
           "mode": "multi"
@@ -122,7 +122,7 @@
           "hide": false,
           "instant": false,
           "interval": "",
-          "legendFormat": "{{ registration }}",
+          "legendFormat": "{{ registration }}: {{ car_name }}",
           "refId": "A"
         }
       ],
@@ -211,7 +211,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "1h",
+  "refresh": false,
   "schemaVersion": 30,
   "style": "dark",
   "tags": [],
@@ -226,5 +226,5 @@
   "timezone": "",
   "title": "axa-monitor",
   "uid": "rL-KJR87k",
-  "version": 5
+  "version": 6
 }
