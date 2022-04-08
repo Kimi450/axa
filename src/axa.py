@@ -121,14 +121,23 @@ class QuoteHandler:
         # accept cookies
         try:
             self.logger.debug("Accepting cookies")
-            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'VehicleDetails.HasRegNumber1')))
+            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//a[text()="Car Insurance"]')))
             driver.find_element(By.ID, "_evidon-accept-button").click()
         except Exception as e:
             self.logger.error(e)
 
+    def _go_to_car_insurance_page(self, driver):
+        # Go to parent car insurance page
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//a[text()="Car Insurance"]')))
+        driver.execute_script("arguments[0].click();", driver.find_element(By.LINK_TEXT, "Car Insurance"))
+        # Go to car insurance page where the form is present
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//a[text()="Get a car insurance quote"]')))
+        driver.execute_script("arguments[0].click();", driver.find_element(By.XPATH, '//a[text()="Get a car insurance quote"]'))
+
     def _confirm_car(self, driver, registration):
         # confirm car with registration number
         self.logger.debug(f"Confirming car details with registration '{registration}'")
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, "//*[@id='VehicleDetails.HasRegNumber1']/..")))
         driver.find_element(By.XPATH, "//*[@id='VehicleDetails.HasRegNumber1']/..").click()
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'VehicleDetails.VehicleRegistrationNumber')))
         driver.find_element(By.ID, "VehicleDetails.VehicleRegistrationNumber").send_keys(registration)
@@ -224,9 +233,9 @@ class QuoteHandler:
         driver = self.get_driver()
         for attempt in range(retry):
             try:
-                driver.get("https://www.axa.ie/car-insurance/quote/your-details/?promoCode=AXP020001")
-                
+                driver.get("https://www.axa.ie/")
                 self._accept_cookies(driver)
+                self._go_to_car_insurance_page(driver)
                 car_name = self._confirm_car(driver, registration)
                 self._business_use_info(driver)
                 self._annual_distance(driver, config.annual_distance)
