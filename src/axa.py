@@ -146,6 +146,7 @@ class QuoteHandler:
         car_name = driver.find_element(By.XPATH, '//label[text()="Is this the correct car?"]/following-sibling::span/div').text
         driver.find_element(By.XPATH, "//*[@id='VehicleDetails.ConfirmCarSearchBtn1']/..").click()
         return car_name
+
     def _business_use_info(self, driver):
         # For business use or not
         self.logger.debug("Inputting business use info")
@@ -206,7 +207,7 @@ class QuoteHandler:
 
     def _submit_and_get_quote(self, driver, registration, car_name):
         # Terms and conditions
-        self.logger.debug(f"Submitting rqeuest and getting quote for '{registration}'")
+        self.logger.debug(f"Submitting request and getting quote for '{registration}'")
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'ConfirmAssumptions')))
         driver.execute_script("arguments[0].click();", driver.find_element(By.XPATH, "//input[@id='ConfirmAssumptions']"))
 
@@ -254,9 +255,7 @@ class QuoteHandler:
                 self.logger.error(e)
                 self.logger.error(f"Attempt ({attempt+1}/{retry}): Failed to get quote for registration '{registration}'. Sleeping for {self._get_formatted_time(sleep_time)}")
                 self.failed_attempts.inc()
-                self.registration_metrics.labels(registration).set(0)
                 sleep(sleep_time)
-
 
     def get_quotes(self, config, registrations, retry=3, sleep_time=60):
         quotes = set()
