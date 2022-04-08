@@ -14,6 +14,22 @@ monitoring:
   releaseName: kube-prometheus-stack # name of the monitoring helm release
   namespace: monitoring # name of the monitoring namespace
 
+config:
+  values:
+    annual_distance: "Up to 10,000 km"
+    first_name: "John"
+    last_name: "Doe"
+    date_of_birth: "1950-01-01"
+    phone_number: "0899999999"
+    email: "username@email.com"
+    occupation: "Software Developer"
+    eir_code: "T33LOL1"
+    license_held: "Less than 1 year"
+    prometheus_client_port: "8000"
+    registrations:
+      - "11L80085"
+      - "11L80085"
+
 # resources:
 #   limits:
 #     memory: 32Mi

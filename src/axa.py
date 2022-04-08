@@ -291,7 +291,7 @@ def get_args():
     no_config_file_args_group.add_argument("--occupation", dest="occupation", help="You occupation (exactly as seen on the website)", type=str)
     no_config_file_args_group.add_argument("--eir-code", dest="eir_code", help="Your eircode", type=str)
     no_config_file_args_group.add_argument("--license-held", dest="license_held", help="Time license held for (exactly as seen on the website)", type=str)
-    no_config_file_args_group.add_argument("--registrations", dest="registrations", help="Registrations of cars to get quotes for", type=str, nargs='*')
+    no_config_file_args_group.add_argument("--registrations", dest="registrations", help="List of vehicle registrations", type=str, action="extend", nargs="+")
     no_config_file_args_group.add_argument("--prometheus-client-port", dest="prometheus_client_port", help="Port at which the Prometheus client server runs", type=int)
 
     config_file_args_group = parser.add_argument_group("config_file_args_group", "Group of required arguments if config file is provided")

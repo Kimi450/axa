@@ -1,9 +1,9 @@
 # axa
 Get axa quotes automatically with certain assumptions.
 
-# Build
+# Build and Install
 
-#### To build a helm chart:
+#### To build and install the helm chart:
 ```
 docker build -t <USERNAME>/<REPO> .
 docker push <USERNAME>/<REPO>:<VERSION>
@@ -17,10 +17,18 @@ or edit the below file and run it
 
 #### To test:
 ```
-docker build -t kimi450/axa-test . && docker run --rm -p 8000:8000 kimi450/axa-test
+docker build -t axa-test:test .
+(cd charts && helm install test . --set image.repository=axa-test --set image.tag=test)
 ```
 
-# Usage
+# Deployment Configuration
+You must fill out all the required values under `config.values` in the `charts/values.yaml` file. If any one of them is missing, the default config file `config/config.yaml` will be used. 
+
+The configuration is put into a `ConfigMap` kubernetes resource. This can be edited and then when you restart the pod, it will pick up the new configuration and run with those values instead.
+
+NOTE: `charts/linked-config.yaml` is a soft link to `config/config.yaml`.
+
+# Plain Script Usage
 ```
 usage: axa [-h] [--annual-distance ANNUAL_DISTANCE] [--first-name FIRST_NAME] [--last-name LAST_NAME] [--date-of-birth DATE_OF_BIRTH] [--phone-number PHONE_NUMBER] [--email EMAIL] [--occupation OCCUPATION] [--eir-code EIR_CODE] [--license-held LICENSE_HELD]
            [--registrations [REGISTRATIONS [REGISTRATIONS ...]]] [--prometheus-client-port PROMETHEUS_CLIENT_PORT] [--config-file CONFIG_FILE]
@@ -50,7 +58,7 @@ no_config_file_args_group:
   --license-held LICENSE_HELD
                         Time license held for (exactly as seen on the website)
   --registrations [REGISTRATIONS [REGISTRATIONS ...]]
-                        Registrations of cars to get quotes for
+                        List of vehicle registrations
   --prometheus-client-port PROMETHEUS_CLIENT_PORT
                         Port at which the Prometheus client server runs
 

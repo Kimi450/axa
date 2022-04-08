@@ -3,6 +3,4 @@ kind: ConfigMap
 metadata:
   name: {{ .Chart.Name }}-config
 data:
-{{ (.Files.Glob "linked-config.yaml").AsConfig | indent 2 }}
-
-    
+{{- include "configuration" . | indent 2 }}

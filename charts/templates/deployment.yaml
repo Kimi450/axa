@@ -24,10 +24,8 @@ spec:
             mountPath: /etc/config
         command: ["axa"]
         args: ["--config-file", "/etc/config/linked-config.yaml"]
-
       volumes:
         - name: {{ .Chart.Name }}-config-volume
           configMap:
             name: {{ .Chart.Name }}-config
-
       restartPolicy: Always
