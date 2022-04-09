@@ -60,7 +60,7 @@ class Quote:
         self._reference_id = reference_id
         
     def __str__(self):
-        return f"Ref ID: {self.reference_id:10}, Registration: {self.registration:10}, Quote: €{self.price:6}, Car name: {self.car_name}"
+        return f"Ref ID: {self.reference_id:10}, Registration: {self.registration:10}, Quote: €{self.price:7.2f}, Car name: {self.car_name}"
     
 class Config:
     def __init__(self, annual_distance, first_name, last_name, date_of_birth, phone_number, email, occupation, eir_code, license_held, registrations):
@@ -94,6 +94,7 @@ class QuoteHandler:
             level=logging.INFO,
             datefmt='%Y-%m-%d %H:%M:%S')
         self._logger = logging.getLogger(__name__)
+        self._logger.level = logging.INFO
         
     @property
     def failed_attempts(self):
@@ -108,6 +109,9 @@ class QuoteHandler:
         return self._logger
 
 
+    def wait_for_element(self, driver, wait_time_seconds, by_type, string):
+        WebDriverWait(driver, wait_time_seconds).until(EC.presence_of_element_located((by_type, string)))
+
     def get_driver(self):
         self.logger.debug("Getting browser driver")
         chrome_options = ChromeOptions()
@@ -115,52 +119,66 @@ class QuoteHandler:
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument("--disable-extensions")
-        return Chrome(service=Service(ChromeDriverManager(print_first_line=False, log_level=logging.WARNING).install()), options=chrome_options)
+        driver = Chrome(
+            service=Service(ChromeDriverManager(
+                print_first_line=False, log_level=logging.WARNING).install()), 
+            options=chrome_options)
+        self.logger.debug("Done getting browser driver")
+        return driver
 
     def _accept_cookies(self, driver):
         # accept cookies
         try:
             self.logger.debug("Accepting cookies")
-            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//a[text()="Car Insurance"]')))
+            self.wait_for_element(driver, 15, By.ID, '_evidon-accept-button')
             driver.find_element(By.ID, "_evidon-accept-button").click()
+            self.logger.debug("Done accepting cookies")
         except Exception as e:
             self.logger.error(e)
 
     def _go_to_car_insurance_page(self, driver):
         # Go to parent car insurance page
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//a[text()="Car Insurance"]')))
+        self.logger.debug("Navigating to car insurance page")
+        self.wait_for_element(driver, 15, By.XPATH, '//a[text()="Car Insurance"]')
         driver.execute_script("arguments[0].click();", driver.find_element(By.LINK_TEXT, "Car Insurance"))
         # Go to car insurance page where the form is present
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//a[text()="Get a car insurance quote"]')))
+        self.wait_for_element(driver, 15, By.XPATH, '//a[text()="Get a car insurance quote"]')
         driver.execute_script("arguments[0].click();", driver.find_element(By.XPATH, '//a[text()="Get a car insurance quote"]'))
+        self.logger.debug("Done navigating to car insurance page")
 
     def _confirm_car(self, driver, registration):
         # confirm car with registration number
         self.logger.debug(f"Confirming car details with registration '{registration}'")
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, "//*[@id='VehicleDetails.HasRegNumber1']/..")))
+        self.wait_for_element(driver, 15, By.ID, "VehicleDetails.HasRegNumber1")
         driver.find_element(By.XPATH, "//*[@id='VehicleDetails.HasRegNumber1']/..").click()
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'VehicleDetails.VehicleRegistrationNumber')))
+        self.wait_for_element(driver, 15, By.ID, "VehicleDetails.VehicleRegistrationNumber")
         driver.find_element(By.ID, "VehicleDetails.VehicleRegistrationNumber").send_keys(registration)
         driver.find_element(By.XPATH, '//button[text()="Find car"]').click()
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'VehicleDetails.ConfirmCarSearchBtn1')))
+        self.wait_for_element(driver, 15, By.ID, "VehicleDetails.ConfirmCarSearchBtn1")
         car_name = driver.find_element(By.XPATH, '//label[text()="Is this the correct car?"]/following-sibling::span/div').text
         driver.find_element(By.XPATH, "//*[@id='VehicleDetails.ConfirmCarSearchBtn1']/..").click()
+        self.logger.debug(f"Done confirming car details with registration '{registration}', name '{car_name}'")
         return car_name
 
     def _business_use_info(self, driver):
         # For business use or not
         self.logger.debug("Inputting business use info")
+        self.wait_for_element(driver, 15, By.ID, "VehicleDetails.IsVehicleForBusinessUse2")
         driver.find_element(By.XPATH, "//*[@id='VehicleDetails.IsVehicleForBusinessUse2']/..").click()
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'VehicleDetails.IsVehicleForCommutingUse1')))
+        self.wait_for_element(driver, 15, By.ID, "VehicleDetails.IsVehicleForCommutingUse1")
         driver.find_element(By.XPATH, "//*[@id='VehicleDetails.IsVehicleForCommutingUse1']/..").click()
+        self.logger.debug("Done inputting business use info")
 
     def _annual_distance(self, driver, annual_distance):
         self.logger.debug(f"Inputting expected annual distance travelled with '{annual_distance}'")
+        self.wait_for_element(driver, 15, By.ID, 'VehicleDetails.AnnualDistanceDrivenTypeId')
         Select(driver.find_element(By.ID, "VehicleDetails.AnnualDistanceDrivenTypeId")).select_by_visible_text(annual_distance)
+        self.logger.debug(f"Done inputting expected annual distance travelled with '{annual_distance}'")
 
     def _user_info(self, driver, first_name, last_name, date_of_birth, email, phone_number):
         # User info
         self.logger.debug("Inputting user information")
+        self.wait_for_element(driver, 15, By.ID, "ProposerDetails.TitleTypeId1")
         driver.find_element(By.XPATH, "//*[@id='ProposerDetails.TitleTypeId1']/..").click()
         driver.find_element(By.ID, "ProposerDetails.FirstName").send_keys(first_name)
         driver.find_element(By.ID, "ProposerDetails.LastName").send_keys(last_name)
@@ -169,71 +187,80 @@ class QuoteHandler:
         driver.find_element(By.ID, "ProposerDetails.DateOfBirth.Year").send_keys(date_of_birth.split('-')[0])
         driver.find_element(By.ID, "ProposerDetails.EmailAddress").send_keys(email)
         driver.find_element(By.XPATH, "//input[@name='phone-number']").send_keys(phone_number)
+        self.logger.debug("Done inputting user information")
 
     def _employment_info(self, driver, occupation):
         self.logger.debug(f"Confirming employment information as '{occupation}'")
+        self.wait_for_element(driver, 15, By.ID, "ProposerDetails.EmploymentStatusTypeId1")
         driver.find_element(By.XPATH, "//*[@id='ProposerDetails.EmploymentStatusTypeId1']/..").click()
+        self.wait_for_element(driver, 15, By.ID, "ProposerDetails.OccupationTypeDescription")
         driver.find_element(By.ID, "ProposerDetails.OccupationTypeDescription").send_keys(occupation)
         driver.find_element(By.XPATH, "//*[@id='react-autowhatever-1--item-0']").click()
+        self.logger.debug(f"Done confirming employment information as '{occupation}'")
 
     def _address_info(self, driver, eir_code):
         self.logger.debug("Confirming address")
+        self.wait_for_element(driver, 15, By.ID, "ProposerDetails.AddressDisplayFormatted")
         driver.find_element(By.ID, "ProposerDetails.AddressDisplayFormatted").send_keys(eir_code)
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'react-autowhatever-1--item-0')))
+        self.wait_for_element(driver, 15, By.ID, "react-autowhatever-1--item-0")
         driver.find_element(By.XPATH, "//*[@id='react-autowhatever-1--item-0']").click()
         driver.find_element(By.XPATH, "//*[@id='ProposerDetails.HouseHoldTypeId1']/..").click()
+        self.logger.debug("Done confirming address")
 
     def _license_info(self, driver, license_held):
         # License type
         self.logger.debug(f"Inputting license information with license held for '{license_held}'")
+        self.wait_for_element(driver, 15, By.ID, "DrivingHistory.DrivingLicenceTypeId2")
         driver.find_element(By.XPATH, "//*[@id='DrivingHistory.DrivingLicenceTypeId2']/..").click()
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'DrivingHistory.AdvancedDriverTrainingTypeId2')))
+        self.wait_for_element(driver, 15, By.ID, "DrivingHistory.AdvancedDriverTrainingTypeId2")
         driver.find_element(By.XPATH, "//*[@id='DrivingHistory.AdvancedDriverTrainingTypeId2']/..").click()
-
         # Licene held
         Select(driver.find_element(By.ID, "DrivingHistory.YearsLicenceHeldTypeId")).select_by_visible_text(license_held)
-
         # Penalty points
         driver.find_element(By.XPATH, "//*[@id='DrivingHistory.PenaltyPointsDetails.HasPenaltyPoints2']/..").click()
+        self.logger.debug(f"Done inputting license information with license held for '{license_held}'")
 
     def _insurance_info(self, driver):
         self.logger.debug("Inputting previous insurance information")
         # Recent insurance
+        self.wait_for_element(driver, 15, By.ID, "DrivingHistory.DrivingExperienceTypeId2")
         driver.find_element(By.XPATH, "//*[@id='DrivingHistory.DrivingExperienceTypeId2']/..").click()
         # More people in the house discount
         driver.find_element(By.XPATH, "//*[@id='CoverDetails.HasMultiProductDiscount2']/..").click()
         # # How to pay the price?
         # driver.find_element(By.XPATH, "//*[@id='CoverDetails.NormalPaymentMethodTypeId1']/..").click()
+        self.logger.debug("Done inputting previous insurance information")
 
     def _submit_and_get_quote(self, driver, registration, car_name):
         # Terms and conditions
         self.logger.debug(f"Submitting request and getting quote for '{registration}'")
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'ConfirmAssumptions')))
+        self.wait_for_element(driver, 15, By.ID, "ConfirmAssumptions")
         driver.execute_script("arguments[0].click();", driver.find_element(By.XPATH, "//input[@id='ConfirmAssumptions']"))
-
         # submit
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'getquote-btn')))
+        self.wait_for_element(driver, 15, By.ID, "getquote-btn")
         driver.find_element(By.ID, "getquote-btn").click()
-
         # wait till quote there
-        WebDriverWait(driver, 120).until(EC.presence_of_element_located((By.ID, 'YourQuote.Quote')))
-
+        self.wait_for_element(driver, 45, By.ID, "YourQuote.Quote")
         # Ref ID and quote
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, 'CarQuotePremium.QuoteReferenceIdForDisplay')))
+        self.wait_for_element(driver, 15, By.ID, "CarQuotePremium.QuoteReferenceIdForDisplay")
         ref_id = driver.find_element(By.XPATH, '//*[@id="CarQuotePremium.QuoteReferenceIdForDisplay"]').text
         quote = driver.find_element(By.XPATH, '//*[@id="YourQuote.Quote"]/div/div[1]/span/div/div[1]/div[2]').text
-        quote = float(quote[1:])
-                
-        return Quote(registration, car_name, ref_id, quote)
+        quote = Quote(registration, car_name, ref_id, float(quote[1:]))
+        self.logger.debug(f"Done submitting request and getting quote for '{registration}', retrieved quote: '{quote}'")
+        return quote
 
     def _save_quote_reference_id(self, driver):
+        self.logger.debug("Saving quote reference ID")
+        self.wait_for_element(driver, 15, By.XPATH, '//button[text()="Save Quote"]')
         driver.find_element(By.XPATH, '//button[text()="Save Quote"]').click()
+        self.logger.debug("Done saving quote reference ID")
 
     def get_quote(self, config, registration, retry=3, sleep_time=60):
         self.logger.info(f"Getting quote for registration '{registration}'")
         driver = self.get_driver()
         for attempt in range(retry):
             try:
+                self.logger.debug(f"Attempt ({attempt+1}/{retry}): Getting quote for registration '{registration}'")
                 driver.get("https://www.axa.ie/")
                 self._accept_cookies(driver)
                 self._go_to_car_insurance_page(driver)
@@ -248,19 +275,21 @@ class QuoteHandler:
                 quote = self._submit_and_get_quote(driver, registration, car_name)
                 self._save_quote_reference_id(driver)
                 self.registration_metrics.labels(registration=registration, car_name=car_name).set(quote.price)
-                self.logger.info(f"Quote retrieved successfully for registration {registration}: {car_name}")
+                self.logger.debug(f"Done getting quote for registration '{registration}': '{car_name}' with quote '{quote}'")
                 self.logger.info(f"{quote}")
                 return quote
             except Exception as e:
-                self.logger.error(e)
-                self.logger.error(f"Attempt ({attempt+1}/{retry}): Failed to get quote for registration '{registration}'. Sleeping for {self._get_formatted_time(sleep_time)}")
                 self.failed_attempts.inc()
+                self.logger.exception(e)
+                self.logger.error(f"Attempt ({attempt+1}/{retry}): Failed to get quote for registration '{registration}'. Retrying after sleeping for {self._get_formatted_time(sleep_time)}")
                 sleep(sleep_time)
 
     def get_quotes(self, config, registrations, retry=3, sleep_time=60):
+        self.logger.debug(f"Getting quotes for registrations '{registrations}'")
         quotes = set()
         for registration in registrations:
             quotes.add(self.get_quote(config, registration, retry=retry, sleep_time=sleep_time))
+        self.logger.debug(f"Done getting quotes for registrations '{registrations}'")
         return quotes
     
     def print_summary(self, quotes):
@@ -340,6 +369,7 @@ def parse_config_file(file, perms):
             prometheus_client_port = int(parsed_yaml["prometheus_client_port"])
         except yaml.YAMLError as exc:
             print(exc)
+            exit()
     return (config, prometheus_client_port)
 
 def parse_args(args):
