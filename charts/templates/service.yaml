@@ -4,7 +4,6 @@ metadata:
   name: axa
   labels:
     app: {{ .Chart.Name }}
-    prometheus: "true"
 spec:
   type: {{ .Values.service.type }}
   ports:

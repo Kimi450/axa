@@ -99,4 +99,4 @@ config_file_args_group:
 It will also save the quote for later user. Use the **date of birth** and the **email** used along with the **reference ID** when retrieving the quote on their webite at [Axa Retrieve quote](https://www.axa.ie/car-insurance/quote/retrieve-quote/).
 
 # Metrics
-Need to bring up the `ServiceMonitor` CRD in the same namespace of prometheus.
+Prometheus needs to be configured to pick up `ServiceMonitors` from every namespace to be able to pick up metrics for this service.

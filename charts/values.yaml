@@ -10,10 +10,6 @@ service:
   targetPort: 8000 # port the server runs on
   internalPort: 8000 # internal port exposed on the node
 
-monitoring:
-  releaseName: kube-prometheus-stack # name of the monitoring helm release
-  namespace: monitoring # name of the monitoring namespace
-
 config:
   values:
     annual_distance: "Up to 10,000 km"

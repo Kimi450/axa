@@ -2,10 +2,8 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Chart.Name }}-service-monitor
-  namespace: {{ .Values.monitoring.namespace }}
   labels:
     app: {{ .Chart.Name }}
-    release: {{ .Values.monitoring.releaseName }} 
 spec:
   endpoints:
   - path: /metrics
@@ -14,7 +12,7 @@ spec:
     any: true
   selector:
     matchLabels:
-      prometheus: "true"
+      app: {{ .Chart.Name }}
 
 # reset the config with
 # curl -s -XPOST localhost:9090/-/reload -v
