@@ -251,8 +251,15 @@ class QuoteHandler:
 
     def _save_quote_reference_id(self, driver):
         self.logger.debug("Saving quote reference ID")
-        self.wait_for_element(driver, 15, By.XPATH, '//button[text()="Save Quote"]')
-        driver.find_element(By.XPATH, '//button[text()="Save Quote"]').click()
+        try:
+            self.wait_for_element(driver, 15, By.XPATH, '//button[text()="Save Quote"]')
+            driver.find_element(By.XPATH, '//button[text()="Save Quote"]').click()
+            self.logger.debug('Used //button[text()="Save Quote"]')
+        except:
+            self.wait_for_element(driver, 15, By.XPATH, '//a[text()="Save this Quote"]')
+            driver.find_element(By.XPATH, '//a[text()="Save this Quote"]').click()
+            self.logger.debug('Used //a[text()="Save this Quote"]')
+
         self.logger.debug("Done saving quote reference ID")
 
     def get_quote(self, config, registration, retry=3, sleep_time=60):
